@@ -30,7 +30,12 @@ internal_consts = {
 	strLoginUrl = "http://idlogin.spray.se/mail",
 	strInboxUrl = "http://nymail.spray.se/mail/ms_ajax.asp?folder=/Inbox&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
 	strDownloadUrl = "http://nymail.spray.se/tools/getFile.asp?GUID=%s&MsgID=%s&Show=3&ForceDownload=1&name=X*1&MsgFormat=txt&Headers=true",
-	strActionUrl = "http://nymail.spray.se/mail/mail_action.asp"
+	strActionUrl = "http://nymail.spray.se/mail/mail_action.asp",
+
+	separator_row = "_#r|-",
+	separator_col = "_#c|-",
+
+	action_trash = "Action=0&folder=/Inbox&MsgIDs="
 }
 
 internal_state= {
@@ -189,7 +194,7 @@ function quit_update(pstate)
 	local post_uri = internal_consts.strActionUrl
 	local session_id = internal_consts.session_id
 	-- Move to trash
-	local post_data = "Action=0&folder=/Inbox&MsgIDs="
+	local post_data = internal_consts.action_trash
 
 	-- here we need the stat, we build the uri and we check if we 
 	-- need to delete something
@@ -225,12 +230,12 @@ function stat(pstate)
 	local b = internal_state.browser
 	file,err = b:get_uri(internal_consts.strInboxUrl)
 
-	local x = split(file, "_#r|-")
+	local x = split(file, internal_consts.separator_row)
 
 	set_popstate_nummesg(pstate,table.getn(x))
 
 	for i=1,table.getn(x) do
-	   local c = split(x[i], "_#c|-")
+	   local c = split(x[i], internal_consts.separator_col)
 	   local uidl = c[1]
 	   local size = c[8]
 
