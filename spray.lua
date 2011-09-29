@@ -26,22 +26,17 @@ PLUGIN_DESCRIPTIONS = {
 }
 
 internal_consts = {
+	-- Server URLs
 	strLoginUrl = "http://idlogin.spray.se/mail",
 	strInboxUrl = "http://nymail.spray.se/mail/ms_ajax.asp?folder=/Inbox&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
 	strDownloadUrl = "http://nymail.spray.se/tools/getFile.asp?GUID=%s&MsgID=%s&Show=3&ForceDownload=1&name=X*1&MsgFormat=txt&Headers=true",
 	strActionUrl = "http://nymail.spray.se/mail/mail_action.asp"
 }
 
--- protect constants
-internal_consts = protect_table(internal_consts)
-
 internal_state= {
    username="nothing",
    password="nothing",
 	stat_done = false,
-
-   -- Server URL
-   --
 }
 
 -- ************************************************************************** --
@@ -159,15 +154,6 @@ function spray_login()
 	   return POPSERVER_ERR_AUTH
 	end
 
-	--print("we received this webpage: ".. file)
-
-	-- search the session ID
-	-- -- local id = string.match(file,"session_id=(%w+)")
-
-	-- -- if id == nil then 
-	-- -- 	return POPSERVER_ERR_AUTH
-	-- -- end
-
 	-- Get GUID cookie
 	local cookie = b:get_cookie("GUID")
 	local id
@@ -194,7 +180,6 @@ end
 -- -------------------------------------------------------------------------- --
 -- Update the mailbox status and quit
 function quit_update(pstate)
-   -- FIXME
 	-- we need the stat
 	local st = stat(pstate)
 	if st ~= POPSERVER_ERR_OK then return st end
@@ -242,12 +227,8 @@ function stat(pstate)
 
 	local x = split(file, "_#r|-")
 
-	--debug print
-	--x:print()
-
 	set_popstate_nummesg(pstate,table.getn(x))
 
-	-- Fixme
 	for i=1,table.getn(x) do
 	   local c = split(x[i], "_#c|-")
 	   local uidl = c[1]
@@ -336,8 +317,6 @@ function retr(pstate,msg,data)
 	local st = stat(pstate)
 	if st ~= POPSERVER_ERR_OK then return st end
 
-	--print("Enter retr: " .. msg)
-	
 	-- the callback
 	local cb = retr_cb(data)
 	
@@ -347,8 +326,6 @@ function retr(pstate,msg,data)
 	local uidl = get_mailmessage_uidl(pstate,msg)
 	local uri = string.format(internal_consts.strDownloadUrl, id, uidl)
 
-	--print("Download: " .. uri)
-	
 	-- tell the browser to pipe the uri using cb
 	local f,rc = b:pipe_uri(uri,cb)
 
