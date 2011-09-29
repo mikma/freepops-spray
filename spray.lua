@@ -26,7 +26,7 @@ PLUGIN_DESCRIPTIONS = {
 }
 
 
-foo_globals= {
+internal_state= {
    username="nothing",
    password="nothing",
 	stat_done = false,
@@ -78,7 +78,7 @@ end
 -- -------------------------------------------------------------------------- --
 -- Must save the mailbox name
 function user(pstate,username)
-	foo_globals.username = username
+	internal_state.username = username
 	--print("*** the user wants to login as '"..username.."'")
 	return POPSERVER_ERR_OK
 end
@@ -89,10 +89,10 @@ end
 function pass(pstate,password)
 
 	-- save the password
-	foo_globals.password = password
+	internal_state.password = password
 
 	--print("*** the user inserted '"..password..
-	--	"' as the password for '"..foo_globals.username.."'")
+	--	"' as the password for '"..internal_state.username.."'")
 
 	-- eventually load sessions
 	local s = session.load_lock(key())
@@ -101,7 +101,7 @@ function pass(pstate,password)
 	if s ~= nil then
 		-- "\a" means locked
 		if s == "\a" then
-			log.say("Session for "..foo_globals.name..
+			log.say("Session for "..internal_state.name..
 				" is already locked\n")
 			return POPSERVER_ERR_LOCKED
 		end
@@ -110,34 +110,34 @@ function pass(pstate,password)
 		local c,err = loadstring(s)
 		if not c then
 			log.error_print("Unable to load saved session: "..err)
-			return foo_login()
+			return spray_login()
 		end
 
 		-- exec the code loaded from the session string
 		c()
 
-		log.say("Session loaded for " .. foo_globals.username ..
-			"(" .. foo_globals.session_id .. ")\n")
+		log.say("Session loaded for " .. internal_state.username ..
+			"(" .. internal_state.session_id .. ")\n")
 		return POPSERVER_ERR_OK
 	else
 		-- call the login procedure
-		return foo_login()
+		return spray_login()
 	end
 end
 
 	
-function foo_login()
+function spray_login()
 	-- create a new browser
 	local b = browser.new()
 	-- store the browser object in globals
-	foo_globals.browser = b
+	internal_state.browser = b
 -- 	b:verbose_mode()
 
 	-- create the data to post
 	local post_data = string.format("username=%s&password=%s",
-		foo_globals.username,foo_globals.password)
+		internal_state.username,internal_state.password)
 	-- the uri to post to
-	local post_uri = foo_globals.strLoginUrl
+	local post_uri = internal_state.strLoginUrl
 
 	-- post it
 	local file,err = nil, nil
@@ -176,7 +176,7 @@ function foo_login()
 	   
 	print("we are logged in: " .. id)
 
-	foo_globals.session_id = id
+	internal_state.session_id = id
 
 	return POPSERVER_ERR_OK
 end
@@ -195,9 +195,9 @@ function quit_update(pstate)
 	if st ~= POPSERVER_ERR_OK then return st end
 
 	-- shorten names, not really important
-	local b = foo_globals.browser
-	local post_uri = foo_globals.strActionUrl
-	local session_id = foo_globals.session_id
+	local b = internal_state.browser
+	local post_uri = internal_state.strActionUrl
+	local session_id = internal_state.session_id
 	-- Move to trash
 	local post_data = "Action=0&folder=/Inbox&MsgIDs="
 
@@ -229,11 +229,11 @@ end
 -- -------------------------------------------------------------------------- --
 -- Fill the number of messages and their size
 function stat(pstate)
-	if foo_globals.stat_done == true then return POPSERVER_ERR_OK end
+	if internal_state.stat_done == true then return POPSERVER_ERR_OK end
 	
 	local file,err = nil, nil
-	local b = foo_globals.browser
-	file,err = b:get_uri(foo_globals.strInboxUrl)
+	local b = internal_state.browser
+	file,err = b:get_uri(internal_state.strInboxUrl)
 
 	local x = split(file, "_#r|-")
 
@@ -259,7 +259,7 @@ function stat(pstate)
 	   set_mailmessage_uidl(pstate,i,uidl)
 	end
 
-	foo_globals.stat_done = true
+	internal_state.stat_done = true
 	return POPSERVER_ERR_OK
 end
 
@@ -337,10 +337,10 @@ function retr(pstate,msg,data)
 	local cb = retr_cb(data)
 	
 	-- some local stuff
-	local b = foo_globals.browser
-	local id = foo_globals.session_id
+	local b = internal_state.browser
+	local id = internal_state.session_id
 	local uidl = get_mailmessage_uidl(pstate,msg)
-	local uri = string.format(foo_globals.strDownloadUrl, id, uidl)
+	local uri = string.format(internal_state.strDownloadUrl, id, uidl)
 
 	--print("Download: " .. uri)
 	
@@ -366,7 +366,7 @@ end
 -- for all the webmails
 --
 function key()
-	return foo_globals.username .. foo_globals.password
+	return internal_state.username .. internal_state.password
 end
 
 
@@ -381,9 +381,9 @@ end
 -- method by hand hacking a bit on names
 --
 function serialize_state()
-	foo_globals.stat_done = false;
-	return serial.serialize("foo_globals",foo_globals) ..
-	foo_globals.browser:serialize("foo_globals.browser")
+	internal_state.stat_done = false;
+	return serial.serialize("internal_state",internal_state) ..
+	internal_state.browser:serialize("internal_state.browser")
 end
 
 
