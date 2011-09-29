@@ -149,14 +149,14 @@ function spray_login()
 	file,err = b:post_uri(post_uri,post_data)
 
 	if file == nil then 
-	   print("we received this error: ".. err)
+		log.error_print("We received this error: ".. err)
 		return POPSERVER_ERR_AUTH
 	end
 
 	local cookie = b:get_cookie("loggedin")
 	if not cookie then
-	   print("we weren't logged in: no cookie")
-	   return POPSERVER_ERR_AUTH
+		log.error_print("We weren't logged in: no cookie")
+		return POPSERVER_ERR_AUTH
 	end
 
 	-- Get GUID cookie
@@ -170,7 +170,7 @@ function spray_login()
 	   return POPSERVER_ERR_AUTH
 	end
 	   
-	print("we are logged in: " .. id)
+	log.say("We are logged in: " .. id .."\n")
 
 	internal_state.session_id = id
 
@@ -243,8 +243,8 @@ function stat(pstate)
 	      break
 	   end
 
-	   print("ID: " .. uidl)
-	   print("Size: " .. size)
+	   log.dbg("ID: " .. uidl .."\n")
+	   log.dbg("Size: " .. size .."\n")
 
 	   set_mailmessage_size(pstate,i,tonumber(size))
 	   set_mailmessage_uidl(pstate,i,uidl)
@@ -337,7 +337,6 @@ function retr(pstate,msg,data)
 	if not f then
 	   log.error_print("Asking for "..uri.."\n")
 	   log.error_print(rc.."\n")
-	   print("Error f nil")
 	   return POPSERVER_ERR_NETWORK
 	else
 	   popserver_callback("\r\n", data)
