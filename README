@@ -1,0 +1,15 @@
+FreePOPs @spray.se and @home.se webmail interface
+=================================================
+
+
+Known problems
+--------------
+
+* Failes to download emails with more than about 200 characters in the
+  subject.
+
+
+TODO
+----
+
+* Log out from the webmail when done.
