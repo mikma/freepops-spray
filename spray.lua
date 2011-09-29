@@ -9,7 +9,7 @@
 -- ************************************************************************** --
 
 PLUGIN_VERSION = "0.0.1"
-PLUGIN_NAME = "Spray web mail"
+PLUGIN_NAME = "spray.se"
 PLUGIN_REQUIRE_VERSION = "0.2.0"
 PLUGIN_LICENSE = "GNU/GPL"
 PLUGIN_URL = "http://www.freepops.org/"
