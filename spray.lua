@@ -25,6 +25,15 @@ PLUGIN_DESCRIPTIONS = {
 	en=[[----]]
 }
 
+internal_consts = {
+	strLoginUrl = "http://idlogin.spray.se/mail",
+	strInboxUrl = "http://nymail.spray.se/mail/ms_ajax.asp?folder=/Inbox&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
+	strDownloadUrl = "http://nymail.spray.se/tools/getFile.asp?GUID=%s&MsgID=%s&Show=3&ForceDownload=1&name=X*1&MsgFormat=txt&Headers=true",
+	strActionUrl = "http://nymail.spray.se/mail/mail_action.asp"
+}
+
+-- protect constants
+internal_consts = protect_table(internal_consts)
 
 internal_state= {
    username="nothing",
@@ -33,10 +42,6 @@ internal_state= {
 
    -- Server URL
    --
-   strLoginUrl = "http://idlogin.spray.se/mail",
-   strInboxUrl = "http://nymail.spray.se/mail/ms_ajax.asp?folder=/Inbox&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
-   strDownloadUrl = "http://nymail.spray.se/tools/getFile.asp?GUID=%s&MsgID=%s&Show=3&ForceDownload=1&name=X*1&MsgFormat=txt&Headers=true",
-   strActionUrl = "http://nymail.spray.se/mail/mail_action.asp"
 }
 
 -- ************************************************************************** --
@@ -137,7 +142,7 @@ function spray_login()
 	local post_data = string.format("username=%s&password=%s",
 		internal_state.username,internal_state.password)
 	-- the uri to post to
-	local post_uri = internal_state.strLoginUrl
+	local post_uri = internal_consts.strLoginUrl
 
 	-- post it
 	local file,err = nil, nil
@@ -196,8 +201,8 @@ function quit_update(pstate)
 
 	-- shorten names, not really important
 	local b = internal_state.browser
-	local post_uri = internal_state.strActionUrl
-	local session_id = internal_state.session_id
+	local post_uri = internal_consts.strActionUrl
+	local session_id = internal_consts.session_id
 	-- Move to trash
 	local post_data = "Action=0&folder=/Inbox&MsgIDs="
 
@@ -233,7 +238,7 @@ function stat(pstate)
 	
 	local file,err = nil, nil
 	local b = internal_state.browser
-	file,err = b:get_uri(internal_state.strInboxUrl)
+	file,err = b:get_uri(internal_consts.strInboxUrl)
 
 	local x = split(file, "_#r|-")
 
@@ -340,7 +345,7 @@ function retr(pstate,msg,data)
 	local b = internal_state.browser
 	local id = internal_state.session_id
 	local uidl = get_mailmessage_uidl(pstate,msg)
-	local uri = string.format(internal_state.strDownloadUrl, id, uidl)
+	local uri = string.format(internal_consts.strDownloadUrl, id, uidl)
 
 	--print("Download: " .. uri)
 	
