@@ -1,3 +1,4 @@
+-- -*- mode: Lua; lua-indent-level: 8; indent-tabs-mode: t; -*-
 -- ************************************************************************** --
 --  FreePOPs @spray.se and @home.se webmail interface
 -- 
@@ -28,6 +29,7 @@ PLUGIN_DESCRIPTIONS = {
 foo_globals= {
    username="nothing",
    password="nothing",
+	stat_done = false,
 
    -- Server URL
    --
@@ -60,7 +62,7 @@ function init(pstate)
 		PLUGIN_NAME.."' version '"..PLUGIN_VERSION.."' started!\n")
 
 	-- the serialization module
-	--require("serial")
+	require("serial")
 
 	-- the browser module
 	require("browser")
@@ -80,14 +82,51 @@ function user(pstate,username)
 	--print("*** the user wants to login as '"..username.."'")
 	return POPSERVER_ERR_OK
 end
+
+
 -- -------------------------------------------------------------------------- --
 -- Must login
 function pass(pstate,password)
 
+	-- save the password
 	foo_globals.password = password
+
 	--print("*** the user inserted '"..password..
 	--	"' as the password for '"..foo_globals.username.."'")
+
+	-- eventually load sessions
+	local s = session.load_lock(key())
+
+	-- check if loaded properly
+	if s ~= nil then
+		-- "\a" means locked
+		if s == "\a" then
+			log.say("Session for "..foo_globals.name..
+				" is already locked\n")
+			return POPSERVER_ERR_LOCKED
+		end
+
+		-- load the session
+		local c,err = loadstring(s)
+		if not c then
+			log.error_print("Unable to load saved session: "..err)
+			return foo_login()
+		end
+
+		-- exec the code loaded from the session string
+		c()
+
+		log.say("Session loaded for " .. foo_globals.username ..
+			"(" .. foo_globals.session_id .. ")\n")
+		return POPSERVER_ERR_OK
+	else
+		-- call the login procedure
+		return foo_login()
+	end
+end
+
 	
+function foo_login()
 	-- create a new browser
 	local b = browser.new()
 	-- store the browser object in globals
@@ -144,6 +183,7 @@ end
 -- -------------------------------------------------------------------------- --
 -- Must quit without updating
 function quit(pstate)
+	session.unlock(key())
 	return POPSERVER_ERR_OK
 end
 -- -------------------------------------------------------------------------- --
@@ -176,6 +216,13 @@ function quit_update(pstate)
 	if delete_something then
 		b:post_uri(post_uri,post_data)
 	end
+
+	-- save fails if it is already saved
+	session.save(key(),serialize_state(),session.OVERWRITE)
+	-- unlock is useless if it have just been saved, but if we save
+	-- without overwriting the session must be unlocked manually
+	-- since it would fail instead overwriting
+	session.unlock(key())
 
 	return POPSERVER_ERR_OK
 end
@@ -311,6 +358,34 @@ function retr(pstate,msg,data)
 
 	return POPSERVER_ERR_OK
 end
+
+--------------------------------------------------------------------------------
+-- The key used to store session info
+--
+-- This key must be unique for all webmails, since the session pool is one
+-- for all the webmails
+--
+function key()
+	return foo_globals.username .. foo_globals.password
+end
+
+
+--------------------------------------------------------------------------------
+-- Serialize the internal state
+--
+-- serial.serialize is not enough powerful to correctly serialize the
+-- internal state. The field b is the problem. b is an object. This means
+-- that it is a table (and no problem for this) that has some field that are
+-- pointers to functions. this is the problem. there is no easy way for the
+-- serial module to know how to serialize this. so we call b:serialize
+-- method by hand hacking a bit on names
+--
+function serialize_state()
+	foo_globals.stat_done = false;
+	return serial.serialize("foo_globals",foo_globals) ..
+	foo_globals.browser:serialize("foo_globals.browser")
+end
+
 
 -- ************************************************************************** --
 --  Utility functions
