@@ -230,6 +230,23 @@ function stat(pstate)
 	local b = internal_state.browser
 	file,err = b:get_uri(internal_consts.strInboxUrl)
 
+	if file == nil then
+		return POPSERVER_ERR_OK
+	end
+
+	if file == "m2w99" then
+		-- Automatically logged out
+		-- Log in again
+		local res = spray_login()
+
+		if not (res == POPSERVER_ERR_OK) then
+			return res
+		end
+
+		b = internal_state.browser
+		file,err = b:get_uri(internal_consts.strInboxUrl)
+	end
+
 	local x = split(file, internal_consts.separator_row)
 
 	set_popstate_nummesg(pstate,table.getn(x))
