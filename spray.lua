@@ -28,9 +28,9 @@ PLUGIN_DESCRIPTIONS = {
 internal_consts = {
 	-- Server URLs
 	strLoginUrl = "http://idlogin.spray.se/mail",
-	strInboxUrl = "http://nymail.spray.se/mail/ms_ajax.asp?folder=/Inbox&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
-	strDownloadUrl = "http://nymail.spray.se/tools/getFile.asp?GUID=%s&MsgID=%s&Show=3&ForceDownload=1&name=X*1&MsgFormat=txt&Headers=true",
-	strActionUrl = "http://nymail.spray.se/mail/mail_action.asp",
+	strInboxUrl = "https://nymail.spray.se/mail/ms_ajax.asp?folder=/Inbox&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
+	strDownloadUrl = "https://nymail.spray.se/tools/getFile.asp?GUID=%s&MsgID=%s&Show=3&ForceDownload=1&name=X*1&MsgFormat=txt&Headers=true",
+	strActionUrl = "https://nymail.spray.se/mail/mail_action.asp",
 
 	separator_row = "_#r|-",
 	separator_col = "_#c|-",
