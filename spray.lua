@@ -20,6 +20,7 @@ PLUGIN_DOMAINS = {"@spray.se", "@home.se"}
 -- PLUGIN_REGEXES = {"@..."}
 PLUGIN_PARAMETERS = { 
 	{name="--name--", description={en="--desc--",it=="--desc--"}},
+	{name="folder", description={en=[[The folder you want to interact with. Default is Inbox, other values are: Drafts.]]}},
 }
 PLUGIN_DESCRIPTIONS = {
 	en=[[----]]
@@ -28,14 +29,17 @@ PLUGIN_DESCRIPTIONS = {
 internal_consts = {
 	-- Server URLs
 	strLoginUrl = "http://idlogin.spray.se/mail",
-	strInboxUrl = "https://nymail.spray.se/mail/ms_ajax.asp?folder=/Inbox&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
+	strInboxUrl = "https://nymail.spray.se/mail/ms_ajax.asp?folder=/%s&pg=1&msgno=25&sortby=Received&sort_order=DESC&dtTS=full&JSON=yes&BusyEmptyTrash=false&bBusyEmptyJunk=false",
 	strDownloadUrl = "https://nymail.spray.se/tools/getFile.asp?GUID=%s&MsgID=%s&Show=3&ForceDownload=1&name=X*1&MsgFormat=txt&Headers=true",
 	strActionUrl = "https://nymail.spray.se/mail/mail_action.asp",
+
+	-- Defined Mailbox names - These define the names to use in the URL for the mailboxes
+	strInbox = "Inbox",
 
 	separator_row = "_#r|-",
 	separator_col = "_#c|-",
 
-	action_trash = "Action=0&folder=/Inbox&MsgIDs="
+	action_trash = "Action=0&folder=/%s&MsgIDs="
 }
 
 internal_state= {
@@ -194,7 +198,8 @@ function quit_update(pstate)
 	local post_uri = internal_consts.strActionUrl
 	local session_id = internal_consts.session_id
 	-- Move to trash
-	local post_data = internal_consts.action_trash
+	local mbox = (freepops.MODULE_ARGS or {}).folder or internal_consts.strInbox
+	local post_data = string.format(internal_consts.action_trash, mbox)
 
 	-- here we need the stat, we build the uri and we check if we 
 	-- need to delete something
@@ -228,7 +233,9 @@ function stat(pstate)
 	
 	local file,err = nil, nil
 	local b = internal_state.browser
-	file,err = b:get_uri(internal_consts.strInboxUrl)
+	local mbox = (freepops.MODULE_ARGS or {}).folder or internal_consts.strInbox
+	local url = string.format(internal_consts.strInboxUrl, mbox)
+	file,err = b:get_uri(url)
 
 	if file == nil then
 		return POPSERVER_ERR_OK
@@ -244,7 +251,7 @@ function stat(pstate)
 		end
 
 		b = internal_state.browser
-		file,err = b:get_uri(internal_consts.strInboxUrl)
+		file,err = b:get_uri(url)
 	end
 
 	local x = split(file, internal_consts.separator_row)
